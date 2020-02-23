@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./mysql/db:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: wordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    build:
+      context: "."
+      args:
+        WP_PATH: /var/www/html
+        WP_VERSION: 5.3.2
+        WP_LOCALE: ja
+    volumes:
+      - shared_wordpress:/var/www/html
+      - ./mytheme:/var/www/html/wp-content/themes/mytheme
+    depends_on:
+      - db
+    restart: always
+
+  nginx:
+    image: nginx:stable-alpine
+    volumes:
+      - shared_wordpress:/var/www/html
+      - ./mytheme:/var/www/html/wp-content/themes/mytheme
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 8000:80
+    depends_on:
+      - wordpress
+    restart: always
+
+volumes:
+  shared_wordpress:
+    driver: local
